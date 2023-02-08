@@ -1,0 +1,47 @@
+version: "3"
+
+networks:
+  cloud_net:
+services:
+  nacos:
+    image: nacos/nacos-server
+    environment:
+      MODE: standalone # -m standalone
+    ports:
+      - "8848:8848"
+    networks:
+      - cloud_net
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    volumes:
+      - "/var/lib/mysql:/var/lib/mysql"
+      - "$PWD/mysql/conf:/etc/mysql/conf.d/"
+      - "$PWD/mysql/log:/var/log/mysql"
+    networks:
+      - cloud_net
+
+  userservice:
+    build: ./user-service
+    networks:
+      - cloud_net
+    depends_on: # 该服务所依赖的服务
+      - nacos
+
+  orderservice:
+    build: ./order-service
+    networks:
+      - cloud_net
+    depends_on: # 该服务所依赖的服务
+      - nacos
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "10010:10010"
+    networks:
+      - cloud_net
+    depends_on:	# 该服务所依赖的服务
+      - nacos

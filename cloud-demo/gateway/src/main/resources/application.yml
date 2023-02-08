@@ -1,0 +1,55 @@
+server:
+  port: 10010 # 网关端口
+spring:
+  application:
+    name: gateway # 服务名称
+  cloud:
+    nacos:
+      server-addr: localhost:8848 # nacos地址
+    gateway:
+      # 网关路由配置
+      routes:
+        # 路由id，自定义路由的唯一标识
+        - id: user-service
+          # uri: http://127.0.0.1:8081 # 路由的目标地址，http就是固定地址
+          # 路由的目标地址，lb就是负载均衡，后面跟服务名称
+          uri: lb://userservice
+          # 路由断言，也就是判断请求是否符合路由规则的条件，符合则转发到路由目的地
+          predicates:
+            # 按照路径匹配，只要以/user/开头就符合要求
+            - Path=/user/**
+          # 过滤器
+#          filters:
+            # 添加到响应头
+#            - AddResponseHeader=webmaster, kaede
+        - id: order-service
+          uri: lb://orderservice
+          predicates:
+            - Path=/order/**
+      # 默认过滤器
+      default-filters:
+        - AddResponseHeader=webmaster, kaede
+        - AddRequestHeader=origin, gateway
+      # 全局的跨域处理
+      globalcors:
+        # 解决options请求被拦截问题
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          # 拦截的请求路径，此处为拦截所有请求
+          '[/**]':
+            # 允许哪些网站的跨域请求
+            allowedOrigins:
+              - "http://localhost:8090"
+            # 允许的跨域ajax的请求方式
+            allowedMethods:
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PUT"
+              - "OPTIONS"
+            # 允许在请求中携带的头信息
+            allowedHeaders: "*"
+            # 是否允许携带cookie
+            allowCredentials: true
+            # 这次跨域检测的有效期，有效期范围内浏览器将不再发起询问，而是直接放行，可以提高性能
+            maxAge: 360000
